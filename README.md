@@ -1,3 +1,13 @@
+The work is entirely systems based. Everything I do runs through SSMS, Azure DevOps, Confluence, SMAX and the shared drives. The servers I administer are not at my desk, they are accessed remotely whether I am in the building or not. My physical location changes nothing about my access, tools or output.
+2.  My work is ticket driven and measurable. Requests come in as DBRs in Azure DevOps, I build, test and deploy against them, and every step is documented in the ticket, the PR and Confluence. The work product is the same from home, and it is auditable either way.
+3.  After hours coverage. Backups, SQL Agent jobs and health checks run on the server's schedule, not office hours. A failed job or a refresh that finishes overnight can be checked and acted on first thing from home, instead of waiting until I am physically in the office. That extends the team's coverage window at no extra cost.
+4.  Long running operations. Database refreshes, data imports and restore tests run for extended stretches where my role is monitoring and verifying. That work is done from a screen regardless, and starting it early from home means it is further along when the developers start their day.
+5.  All collaboration is already virtual. My meetings are on Teams, and day to day coordination with the developers and the production DBA happens through tickets and chat. No part of my workflow depends on someone walking up to my desk.
+6.  Deployment work needs focus. Testing scripts, verifying row counts and data changes, and writing documentation are concentration work where an interruption can mean an error in a deployment. A quieter environment directly reduces that risk.
+7.  I am a single point of failure for the team. I am the only dedicated Dev/Test DBA. Anything that keeps me from the office, a flooded commute in Hampton Roads being a live example this week, stalls the whole DBR queue. Working from home removes that disruption risk almost entirely.
+8.  It directly solves the spacing problem. My seat can go to someone whose role genuinely requires them to be in the building. I occupy a full desk while doing work that has no physical component, which is the definition of a seat that can be freed.
+
+
 /*
 =========================================================
 Discovery Script: JobCategoryID -> PriorityID Rename
