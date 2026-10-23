@@ -1,109 +1,18 @@
+Here is the full feedback across everything you sent, Zu. I also saved it as one assessment file so you have it in the morning: `~/workspace/prepared/2026-10-22/pz-confluence-notes-full-assessment.md`.
 
-=========================================================
-Discovery Script: JobCategoryID -> PriorityID Rename
-Table: dbo.Commitment
-Purpose: Find every object that references JobCategoryID
-before renaming, since sp_rename does NOT update code 
-that references the column by name.
-=========================================================
-*/
+**Overall verdict.** What you found is seven sets of notes: the 4-13-26 pilot prep, the 5-13-25 meeting notes, the 6-20-25 pilot planning, the 7-29-25 follow up, the 8-18-25 PoW touch point, and two versions of the August 2025 Lessons Learned. Collectively they are a solid application history and a weak documentation library. They answer Odette's first ask, context of the applications including vendor and developers, far better than they answer her second, the vendor Install/Admin guide, which genuinely does not appear to exist anywhere you looked. And the collection itself tells you why: the DEV database was created by a former employee who left no transition documentation, and when Veronica rolled off in August 2025 her transition document was still "in the works." The knowledge on this project lives in people and meeting notes, not in guides. You are not bad at finding documents. The documents were never finished.
 
------------------------------------------------------------
--- SECTION 1: Confirm the column exists and get its details
------------------------------------------------------------
-SELECT 
-    c.name AS ColumnName,
-    t.name AS DataType,
-    c.max_length,
-    c.is_nullable,
-    c.default_object_id
-FROM sys.columns c
-JOIN sys.types t ON c.user_type_id = t.user_type_id
-WHERE c.object_id = OBJECT_ID('dbo.Commitment')
-    AND c.name = 'JobCategoryID';
+**The story the notes tell, in order.** Spring 2025: the team is planning the PZ rollout by pilots, Dan Burs is the SME who works with the vendor, Brian Mitchell is the vendor developer, sprints run in Jira, and there is a plan to wrap PZ in a web API while maintenance stays on PZ. Summer 2025: migration work begins, Bridge database data gets cleaned in Excel and scripted into PZ, AD groups and CUAS forms become the access machinery, and the SQL migration runs June through August. August 2025: Pilot 0 launches roughly on time but the database stand up nearly breaks it, which produces the lessons learned. Late 2025 into 2026: pilots continue, the PoW group plans to migrate fully into PZ for 2027, and feature work pauses pending a new budgeting tool.
 
------------------------------------------------------------
--- SECTION 2: Any indexes referencing this column
--- (sp_rename on the column does NOT rename these automatically
---  if they have the old name baked into the index name itself)
------------------------------------------------------------
-SELECT 
-    i.name AS IndexName,
-    i.type_desc AS IndexType,
-    c.name AS ColumnName
-FROM sys.indexes i
-JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-WHERE i.object_id = OBJECT_ID('dbo.Commitment')
-    AND c.name = 'JobCategoryID';
+**The strongest material for tomorrow, ranked.**
 
------------------------------------------------------------
--- SECTION 3: Default or check constraints on this column
------------------------------------------------------------
-SELECT 
-    dc.name AS DefaultConstraintName,
-    c.name AS ColumnName,
-    dc.definition
-FROM sys.default_constraints dc
-JOIN sys.columns c ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id
-WHERE dc.parent_object_id = OBJECT_ID('dbo.Commitment')
-    AND c.name = 'JobCategoryID';
+1. The Pilot 0 access saga, documented twice by your own team. Both failure modes are in writing: too little access stalled a launch until the original admin broke protocol to grant advanced permissions, and too much access happened when the PZ team created the SMAX AD groups themselves and the Dev group ended up with global access until the first IT Admin caught it. Your request is the middle path between those two documented failures. That is the whole meeting in one sentence.
+2. **DBR form 3912.** The final lessons learned names it explicitly as the form for Database Administrator access to the TST database, and says that access worked well. Asking "should this run through a 3912" converts a permissions debate into a process step.
+3. The team's own recommendations, which sound like your agenda: verify all users have Windows AD permission before launch; put PRD CUAS in early so parameters are controlled through the database itself; document verbal agreements instead of losing them. You are asking them to let you implement their own lessons learned.
+4. Growth pressure. PoW migrates fully into PZ for 2027 and pilots keep expanding. Access requests will grow whether or not a process exists. Fixing it now, at Dev/Test DBA scale, is cheaper than at full rollout scale.
 
-SELECT 
-    cc.name AS CheckConstraintName,
-    cc.definition
-FROM sys.check_constraints cc
-WHERE cc.parent_object_id = OBJECT_ID('dbo.Commitment')
-    AND cc.definition LIKE '%JobCategoryID%';
+**Weaknesses to be honest about.** These are meeting notes, with all the limits that implies: two overlapping drafts of the same lessons learned instead of one canonical version, unnamed actors in the key episode (you still do not know who the original admin and second admin were, and one of them may be in tomorrow's room), and zero technical specification. Nothing states what SQL Server setup the application requires, which accounts it runs under, or what its baseline permissions should be. If Odette reads the same pages, she will find context but not the security requirements she asked to review. Do not oversell the packet as the guide. Present it as what it is: the documented context, plus a list of what does not exist and who might hold it, Dan for the vendor side, Louis for the implementation plan, and whoever finished Veronica's transition document if anyone did.
 
------------------------------------------------------------
--- SECTION 4: Foreign keys involving this column (incoming 
--- or outgoing) - unlikely given the name, but worth checking
------------------------------------------------------------
-SELECT 
-    fk.name AS ForeignKeyName,
-    OBJECT_NAME(fk.parent_object_id) AS ParentTable,
-    COL_NAME(fkc.parent_object_id, fkc.parent_column_id) AS ParentColumn,
-    OBJECT_NAME(fk.referenced_object_id) AS ReferencedTable,
-    COL_NAME(fkc.referenced_object_id, fkc.referenced_column_id) AS ReferencedColumn
-FROM sys.foreign_keys fk
-JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-WHERE (fkc.parent_object_id = OBJECT_ID('dbo.Commitment') 
-       AND COL_NAME(fkc.parent_object_id, fkc.parent_column_id) = 'JobCategoryID')
-   OR (fkc.referenced_object_id = OBJECT_ID('dbo.Commitment') 
-       AND COL_NAME(fkc.referenced_object_id, fkc.referenced_column_id) = 'JobCategoryID');
+**One framing adjustment.** Some of these events involved IT and quite possibly people connected to the SQLDBA team. So open with "I reviewed our Confluence record to prepare," not "I discovered." Shared memory lands better than revelation, and it protects you if the original admin story is more sensitive in the room than it reads on the page.
 
------------------------------------------------------------
--- SECTION 5: THE IMPORTANT ONE - Views, Stored Procedures, 
--- Functions, Triggers that reference "JobCategoryID" anywhere
--- in their actual code (text search across all object definitions)
------------------------------------------------------------
-SELECT 
-    o.name AS ObjectName,
-    o.type_desc AS ObjectType,
-    m.definition
-FROM sys.sql_modules m
-JOIN sys.objects o ON m.object_id = o.object_id
-WHERE m.definition LIKE '%JobCategoryID%'
-ORDER BY o.type_desc, o.name;
-
------------------------------------------------------------
--- SECTION 6: Column-level dependency tracking (catches 
--- references that Section 5's text search might structure 
--- differently, e.g. via dynamic SQL is NOT caught here - 
--- manual review of app/dev code still needed for that)
------------------------------------------------------------
-SELECT 
-    referencing_schema_name,
-    referencing_entity_name,
-    referencing_id,
-    COALESCE(referenced_entity_name, '') AS ReferencedEntity
-FROM sys.dm_sql_referencing_entities('dbo.Commitment', 'OBJECT')
-    CROSS APPLY (SELECT referencing_id = OBJECT_ID(referencing_schema_name + '.' + referencing_entity_name)) x;
-
------------------------------------------------------------
--- SECTION 7: Synonyms (unlikely but cheap to check)
------------------------------------------------------------
-SELECT name, base_object_name 
-FROM sys.synonyms 
-WHERE base_object_name LIKE '%Commitment%';
+That is the complete picture. You walk in tomorrow with the request, her conditions, the documented precedent, the correct form, and the honest gap, which is a stronger hand than most people bring to a requirements meeting. Now I am officially cutting you off from homework.
