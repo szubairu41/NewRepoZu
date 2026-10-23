@@ -1,16 +1,4 @@
- “Good morning, and thank you for meeting with us. A little background may help explain why I submitted this request.
 
-Project Zenith was originally developed by an external vendor, and the internal team took ownership in November 2025. The documentation from that period is incomplete. In the team’s Pilot 0 lessons learned, it states that the DEV database was created by a former NNS employee who left no transition documentation, and I have not been able to locate a vendor Installation and Administration Guide.
-
-During Pilot 0, the team initially expected TST to be in the same location as DEV and believed they would have administrative rights. Instead, TST was separately secured, the initial AD group permissions were configured incorrectly, and the launch was ultimately unblocked when advanced permissions were provided outside the normal process. Those permissions then allowed the team to perform hotfixes after launch. The record also shows that AD groups were previously created through SMAX and that DBR Form 3912 was used to request Database Administrator access to TST.
-
-CCB is different. It is an internally developed prototype that was recently moved to SQL Server, so there is no vendor or vendor administration guide for CCBDB.
-
-I am now the first dedicated Dev/Test DBA supporting these systems. The dashboards and health checks I have built are read-only, but my current access does not return all the DMV and definition information needed for diagnosis, and I can only see SQL Agent jobs that I created. I am requesting VIEW SERVER STATE, VIEW DATABASE STATE, and VIEW ANY DEFINITION on the four Dev/Test servers, granted through a limited AD group rather than to me individually. I am not requesting production access.
-
-My goal is a documented and coordinated access model that avoids repeating the Pilot 0 situation, where work was either blocked by insufficient access or exposed to risk through permissions that were too broad.”
-
-/*
 =========================================================
 Discovery Script: JobCategoryID -> PriorityID Rename
 Table: dbo.Commitment
