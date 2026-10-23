@@ -1,4 +1,8 @@
+“Good morning, and thank you for meeting with us. I support Project Zenith and CCBDB as the Dev/Test DBA. My work includes database health checks, performance troubleshooting, schema documentation, and developer support in the Dev and Test environments.
 
+The dashboards and checks I have built are read-only, but my current access prevents several DMVs and object definitions from returning the information needed to diagnose issues. I can also only see SQL Agent jobs that I created, which makes it difficult to coordinate with your existing maintenance.
+
+I am requesting VIEW SERVER STATE, VIEW DATABASE STATE, and VIEW ANY DEFINITION on the four Dev/Test servers, granted through a limited AD group rather than to me individually. I am not requesting production access. My goal is to establish a clear, documented access model that supports Dev/Test without duplicating or interfering with Enterprise DBA maintenance.”
 
 /*
 =========================================================
