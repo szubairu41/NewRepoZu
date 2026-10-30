@@ -23,8 +23,9 @@ DECLARE @Pattern SYSNAME = N'PlanOfWork%';
 
 -- Candidate PoW-only lookup tables that don't match the name pattern.
 -- Adding them here tells you whether anything OUTSIDE PoW still uses them.
-DECLARE @Extra TABLE (TableName SYSNAME);
-INSERT @Extra (TableName) VALUES
+IF OBJECT_ID('tempdb..#Extra') IS NOT NULL DROP TABLE #Extra;
+CREATE TABLE #Extra (TableName SYSNAME);
+INSERT #Extra (TableName) VALUES
     (N'SourceOfFundingAllocation')
     -- , (N'AnotherCandidate')
 ;
@@ -37,7 +38,7 @@ SELECT t.object_id,
 INTO #PoW
 FROM sys.tables t
 WHERE t.name LIKE @Pattern
-   OR t.name IN (SELECT TableName FROM @Extra);
+   OR t.name IN (SELECT TableName FROM #Extra);
 
 -----------------------------------------------------------
 -- 1. Scope + row counts (confirm the list matches Object Explorer)
@@ -114,8 +115,7 @@ JOIN #PoW p ON p.object_id = tr.parent_id;
 -----------------------------------------------------------
 SELECT s.name AS SynonymName, s.base_object_name
 FROM sys.synonyms s
-WHERE s.base_object_name LIKE N'%PlanOfWork%'
-   OR EXISTS (SELECT 1 FROM @Extra e WHERE s.base_object_name LIKE N'%' + e.TableName);
+WHERE EXISTS (SELECT 1 FROM #PoW p WHERE s.base_object_name LIKE N'%' + p.TableName);
 
 -----------------------------------------------------------
 -- 6. SQL Agent job steps that mention PoW tables
@@ -158,3 +158,4 @@ ORDER BY RemovalWave, TableName
 OPTION (MAXRECURSION 100);
 
 DROP TABLE #PoW;
+DROP TABLE #Extra;
