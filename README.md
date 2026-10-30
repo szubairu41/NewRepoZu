@@ -1,17 +1,14 @@
--- PlanOfWork% tables (+ SourceOfFundingAllocation) with NO foreign key dependencies
--- Read-only. Remove the SourceOfFundingAllocation line if you only want PlanOfWork tables.
+-- Every PlanOfWork% table (+ SourceOfFundingAllocation) with FK counts
 SELECT
-    t.name   AS TableName,
-    'None'   AS ForeignKeyName,
-    'None'   AS ChildTable,
-    'None'   AS ReferencedTable_Parent
+    DB_NAME() AS CurrentDatabase,
+    t.name    AS TableName,
+    (SELECT COUNT(*) FROM sys.foreign_keys fk
+      WHERE fk.parent_object_id = t.object_id)      AS OutgoingFKs,   -- this table references others
+    (SELECT COUNT(*) FROM sys.foreign_keys fk
+      WHERE fk.referenced_object_id = t.object_id)  AS IncomingFKs    -- other tables reference this one
 FROM sys.tables t
-WHERE (t.name LIKE 'PlanOfWork%'
-       OR t.name = 'SourceOfFundingAllocation')   -- remove this line if not needed
-  AND NOT EXISTS (
-        SELECT 1
-        FROM sys.foreign_keys fk
-        WHERE fk.parent_object_id = t.object_id
-           OR fk.referenced_object_id = t.object_id
-      )
-ORDER BY t.name;
+WHERE t.name LIKE 'PlanOfWork%'
+   OR t.name = 'SourceOfFundingAllocation'
+ORDER BY (SELECT COUNT(*) FROM sys.foreign_keys fk
+           WHERE fk.parent_object_id = t.object_id
+              OR fk.referenced_object_id = t.object_id), t.name;
