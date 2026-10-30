@@ -1,8 +1,12 @@
--- Replace with the actual table name, run one at a time
-SELECT 
-    fk.name AS ForeignKeyName,
-    OBJECT_NAME(fk.parent_object_id) AS ChildTable,
-    OBJECT_NAME(fk.referenced_object_id) AS ReferencedTable
+-- FK record for PlanOfWork% tables + SourceOfFundingAllocation
+-- Read-only. Includes any FK where either side is one of those tables.
+SELECT
+    fk.name                                  AS ForeignKeyName,
+    OBJECT_NAME(fk.parent_object_id)         AS ChildTable,
+    OBJECT_NAME(fk.referenced_object_id)     AS ReferencedTable_Parent
 FROM sys.foreign_keys fk
-WHERE fk.parent_object_id = OBJECT_ID('dbo.PlanOfWorkBudgetItemWorking')
-   OR fk.referenced_object_id = OBJECT_ID('dbo.PlanOfWorkBudgetItemWorking');
+WHERE OBJECT_NAME(fk.parent_object_id)     LIKE 'PlanOfWork%'
+   OR OBJECT_NAME(fk.referenced_object_id) LIKE 'PlanOfWork%'
+   OR OBJECT_NAME(fk.parent_object_id)     = 'SourceOfFundingAllocation'
+   OR OBJECT_NAME(fk.referenced_object_id) = 'SourceOfFundingAllocation'
+ORDER BY ChildTable, ReferencedTable_Parent, ForeignKeyName;
